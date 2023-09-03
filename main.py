@@ -1,9 +1,14 @@
-correct_username = "Ahmet"
-correct_password = "1234"
+credentials = {
+    "ahmet": "1234",
+    "bob": "builder",
+    "john": "doe"
+}
 
 def isValidCredentials(username, password):
-    return (username.lower() == correct_username.lower()
-            and password == correct_password)
+    if username.lower() in credentials:
+        if credentials[username] == password:
+            return True
+    return False
 
 def main():
     username = input("Enter username: ")
