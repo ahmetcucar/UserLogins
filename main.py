@@ -2,24 +2,32 @@ import hashlib
 import json
 import os
 
-
+# register new account
 def addCredentials(username, password):
     salt = generate_salt()
     hash = hash_password_sha256(password, salt)
 
+    # read data.json
     credentials = []
     try:
         with open("./data.json", "r") as file:
             data = json.load(file)
             if "credentials" in data:
                 credentials = data["credentials"]
+
+                # handle duplicate usernames
+                if len(credentials) > 0:
+                    for entry in credentials:
+                        if entry["username"] == username:
+                            print("Username already exists!")
+                            return
     except FileNotFoundError:
         pass
 
-    #TODO: handle duplicate usernames
 
+    # add new credentials
     credentials.append({"username": username, "salt": salt, "hash": hash})
-
+    
     with open("./data.json", "w") as file:
         json.dump({"credentials": credentials}, file, indent=4)
 
