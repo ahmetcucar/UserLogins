@@ -1,24 +1,51 @@
 import hashlib
+import json
 import os
 
 
-class PasswordManager:
-    def __init__(self):
-        self.__credentials = {}
-        self.__salts = {}
+def addCredentials(username, password):
+    salt = generate_salt()
+    hash = hash_password_sha256(password, salt)
 
-    def add(self, username, password):
-        salt = generate_salt()
-        hash = hash_password_sha256(password, salt)
-        self.__credentials[username] = hash
-        self.__salts[username] = salt
+    credentials = []
+    try:
+        with open("./data.json", "r") as file:
+            data = json.load(file)
+            if "credentials" in data:
+                credentials = data["credentials"]
+    except FileNotFoundError:
+        pass
 
-    def isValidCredentials(self, username, password):
-        if username not in self.__credentials:
-            return False
-        salt = self.__salts[username]
-        hash = hash_password_sha256(password, salt)
-        return hash == self.__credentials[username]
+    #TODO: handle duplicate usernames
+
+    credentials.append({"username": username, "salt": salt, "hash": hash})
+
+    with open("./data.json", "w") as file:
+        json.dump({"credentials": credentials}, file, indent=4)
+
+# TODO: delete account
+
+# TODO: change password
+
+# TODO: wipe out all data
+
+
+def isValidCredentials(username, password):
+    with open("./data.json", "r") as file:
+        data = json.load(file)
+        credentials = data["credentials"]
+        for entry in credentials:
+            if entry["username"] == username:
+                salt = entry["salt"]
+                hash = entry["hash"]
+                salted_password = password + salt
+                sha256_hasher = hashlib.sha256()
+                sha256_hasher.update(salted_password.encode('utf-8'))
+                if hash == sha256_hasher.hexdigest():
+                    return True
+                else:
+                    return False
+        return False
 
 
 def generate_salt():
@@ -33,14 +60,16 @@ def hash_password_sha256(password, salt):
 
 
 def main():
-    pm = PasswordManager()
-    pm.add("ahmet", "ucar")
-    pm.add("hello", "world")
-    pm.add("foo", "bar")
+    addCredentials("ahmet", "ucar")
+    addCredentials("ahmet", "ucar")
+    addCredentials("hello", "world")
+    addCredentials("foo", "bar")
+    addCredentials("valerie", "lange")
+    addCredentials("henry", "ford")
 
     username = input("Enter username: ")
     password = input("Enter password: ")
-    if pm.isValidCredentials(username, password):
+    if isValidCredentials(username, password):
         print("Welcome,", username)
     else:
         print("Wrong username or password! Get lost!")
