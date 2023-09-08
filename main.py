@@ -1,23 +1,26 @@
 import hashlib
 import json
 import os
+from abc import ABC, abstractmethod
 
-class Password_Manager:
-    def __init__(self):
-        pass
-
+class Password_Manager(ABC):
+    @abstractmethod
     def addCredentials(self, username, password):
         pass
 
+    @abstractmethod
     def deleteCredentials(self, username):
         pass
 
+    @abstractmethod
     def changePassword(self, username, old_password, new_password):
         pass
 
+    @abstractmethod
     def isValidCredentials(self, username, password):
         pass
 
+    @abstractmethod
     def wipeOut(self):
         pass
 
