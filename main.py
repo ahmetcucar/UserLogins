@@ -2,6 +2,12 @@ import hashlib
 import json
 import os
 
+class JSON_Password_Manager:
+    def __init__(self, path):
+        self.path = path
+
+    #TODO
+
 # register new account
 def addCredentials(username, password):
     salt = generate_salt()
@@ -27,15 +33,29 @@ def addCredentials(username, password):
 
     # add new credentials
     credentials.append({"username": username, "salt": salt, "hash": hash})
-    
+
     with open("./data.json", "w") as file:
         json.dump({"credentials": credentials}, file, indent=4)
 
-# TODO: delete account
+
+def deleteCredentials(username):
+    with open("./data.json", "r") as file:
+        data = json.load(file)
+        credentials = data["credentials"]
+        for entry in credentials:
+            if entry["username"] == username:
+                credentials.remove(entry)
+                with open("./data.json", "w") as file:
+                    json.dump({"credentials": credentials}, file, indent=4)
+                return
+        print(f"Username {username} does not exist!")
+
 
 # TODO: change password
 
-# TODO: wipe out all data
+def wipeOut():
+    with open("./data.json", "w") as file:
+        json.dump({"credentials": []}, file, indent=4)
 
 
 def isValidCredentials(username, password):
@@ -68,18 +88,20 @@ def hash_password_sha256(password, salt):
 
 
 def main():
+    wipeOut()
     addCredentials("ahmet", "ucar")
-    addCredentials("ahmet", "ucar")
-    addCredentials("hello", "world")
-    addCredentials("foo", "bar")
-    addCredentials("valerie", "lange")
-    addCredentials("henry", "ford")
+    deleteCredentials("ahmet")
+    # deleteCredentials("valerie")
+    # addCredentials("hello", "world")
+    # addCredentials("foo", "bar")
+    # addCredentials("valerie", "lange")
+    # addCredentials("henry", "ford")
 
-    username = input("Enter username: ")
-    password = input("Enter password: ")
-    if isValidCredentials(username, password):
-        print("Welcome,", username)
-    else:
-        print("Wrong username or password! Get lost!")
+    # username = input("Enter username: ")
+    # password = input("Enter password: ")
+    # if isValidCredentials(username, password):
+    #     print("Welcome,", username)
+    # else:
+    #     print("Wrong username or password! Get lost!")
 
 main()
