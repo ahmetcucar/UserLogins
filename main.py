@@ -30,7 +30,6 @@ def addCredentials(username, password):
     except FileNotFoundError:
         pass
 
-
     # add new credentials
     credentials.append({"username": username, "salt": salt, "hash": hash})
 
@@ -51,8 +50,15 @@ def deleteCredentials(username):
         print(f"Username {username} does not exist!")
 
 
-# TODO: change password
+def changePassword(username, old_password, new_password):
+    if not isValidCredentials(username, old_password):
+        print("Wrong username or password!")
+        return
 
+    deleteCredentials(username)
+    addCredentials(username, new_password)
+
+# clear all credentials
 def wipeOut():
     with open("./data.json", "w") as file:
         json.dump({"credentials": []}, file, indent=4)
@@ -90,7 +96,10 @@ def hash_password_sha256(password, salt):
 def main():
     wipeOut()
     addCredentials("ahmet", "ucar")
+    
     deleteCredentials("ahmet")
+
+
     # deleteCredentials("valerie")
     # addCredentials("hello", "world")
     # addCredentials("foo", "bar")
