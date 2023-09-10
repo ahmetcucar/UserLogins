@@ -138,19 +138,20 @@ class SQLite_Password_Manager(Password_Manager):
                 # If the 'users' table exists, print its contents
                 cursor.execute("SELECT * FROM users;")
                 users = cursor.fetchall()
-                print(f"Seems like the 'users' table already exists. It has {len(users)} accounts.")
-                print("Here are the accounts:")
-                for user in users:
-                    print(f"--> {user}")
+                if len(users) > 0:
+                    print(f"Seems like the 'users' table already exists. It has {len(users)} accounts.")
+                    print("Here are the accounts:")
+                    for user in users:
+                        print(f"--> {user}")
 
-                # TODO: use wipeOut() method to clear all credentials
+                    # TODO: use wipeOut() method to clear all credentials
 
-                # Ask the user if they want to delete the 'users' table and create a new one
-                answer = input("Do you want to delete the 'users' table and create a new one? (yes/no) ")
-                if answer == "yes":
-                    cursor.execute("DROP TABLE users;")
-                    cursor.execute("CREATE TABLE users (username TEXT PRIMARY KEY UNIQUE, salt TEXT, hash TEXT);")
-                    print("The 'users' table was deleted and a new one was created.")
+                    # Ask the user if they want to delete the 'users' table and create a new one
+                    answer = input("Do you want to delete the 'users' table and create a new one? (yes/no) ")
+                    if answer == "yes":
+                        cursor.execute("DROP TABLE users;")
+                        cursor.execute("CREATE TABLE users (username TEXT PRIMARY KEY UNIQUE, salt TEXT, hash TEXT);")
+                        print("The 'users' table was deleted and a new one was created.")
 
             else:
                 # If the 'users' table does not exist, create it
@@ -171,6 +172,15 @@ class SQLite_Password_Manager(Password_Manager):
         try:
             sqlite_connection = sqlite3.connect(self.db_name)
             cursor = sqlite_connection.cursor()
+
+            # See if username is already in table
+            username_exists = True
+            while username_exists:
+                cursor.execute(f"SELECT * FROM users WHERE username = '{username}';")
+                username_exists = cursor.fetchone() is not None
+                if username_exists:
+                    username = input(f"Username {username} already exists. Enter a new username:")
+
             cursor.execute("INSERT INTO users VALUES (?, ?, ?);", (username, salt, hash))
             sqlite_connection.commit()
             sqlite_connection.close()
@@ -213,6 +223,13 @@ class SQLite_Password_Manager(Password_Manager):
 
 def main():
     sql_pm = SQLite_Password_Manager()
-    
+    sql_pm.addCredentials("user1", "password1")
+    sql_pm.addCredentials("user2", "password2")
+    sql_pm.print()
+
+    # test username already exists
+    sql_pm.addCredentials("user1", "password1")
+    print()
+    sql_pm.print()
 
 main()
