@@ -135,8 +135,8 @@ class SQLite_Password_Manager(Password_Manager):
             table_exists = cursor.fetchone() is not None
 
             if table_exists:
-                # If the 'users' table exists, print its contents
-                cursor.execute("SELECT * FROM users;")
+                # If the 'users' table exists, print each row's username
+                cursor.execute("SELECT username FROM users;")
                 users = cursor.fetchall()
                 if len(users) > 0:
                     print(f"Seems like the 'users' table already exists. It has {len(users)} accounts.")
@@ -181,6 +181,7 @@ class SQLite_Password_Manager(Password_Manager):
                 if username_exists:
                     username = input(f"Username {username} already exists. Enter a new username:")
 
+            # Add new credentials
             cursor.execute("INSERT INTO users VALUES (?, ?, ?);", (username, salt, hash))
             sqlite_connection.commit()
             sqlite_connection.close()
@@ -190,7 +191,25 @@ class SQLite_Password_Manager(Password_Manager):
 
 
     def deleteCredentials(self, username):
-        pass
+        try:
+            sqlite_connection = sqlite3.connect(self.db_name)
+            cursor = sqlite_connection.cursor()
+
+            # See if username is in table
+            cursor.execute(f"SELECT * FROM users WHERE username = '{username}';")
+            username_exists = cursor.fetchone() is not None
+            if not username_exists:
+                print(f"Username {username} does not exist!")
+                sqlite_connection.close()
+                return
+
+            # Delete credentials
+            cursor.execute(f"DELETE FROM users WHERE username = '{username}';")
+            sqlite_connection.commit()
+            sqlite_connection.close()
+
+        except sqlite3.Error as error:
+            print("Error while connecting to sqlite", error)
 
 
     def changePassword(self, username, old_password, new_password):
@@ -205,6 +224,7 @@ class SQLite_Password_Manager(Password_Manager):
         pass
 
 
+    # TODO: delete later
     def print(self):
         # print every entry in the database
         try:
@@ -220,16 +240,8 @@ class SQLite_Password_Manager(Password_Manager):
             print("Error while connecting to sqlite", error)
 
 
-
+# TODO: hide user password while typing
 def main():
     sql_pm = SQLite_Password_Manager()
-    sql_pm.addCredentials("user1", "password1")
-    sql_pm.addCredentials("user2", "password2")
-    sql_pm.print()
-
-    # test username already exists
-    sql_pm.addCredentials("user1", "password1")
-    print()
-    sql_pm.print()
-
+    
 main()
