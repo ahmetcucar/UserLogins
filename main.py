@@ -61,15 +61,17 @@ class JSON_Password_Manager(Password_Manager):
                         for entry in credentials:
                             if entry["username"] == username:
                                 print("Username already exists!")
-                                return
+                                return False
         except FileNotFoundError:
-            pass
+            return False
 
         # add new credentials
         credentials.append({"username": username, "salt": salt, "hash": hash})
 
         with open(self.path, "w") as file:
             json.dump({"credentials": credentials}, file, indent=4)
+
+        return True
 
 
     def deleteCredentials(self, username):
@@ -81,23 +83,24 @@ class JSON_Password_Manager(Password_Manager):
                     credentials.remove(entry)
                     with open(self.path, "w") as file:
                         json.dump({"credentials": credentials}, file, indent=4)
-                    return
+                    return True
             print(f"Username {username} does not exist!")
+            return False
 
 
     def changePassword(self, username, old_password, new_password):
         if not self.isValidCredentials(username, old_password):
             print("Wrong username or password!")
-            return
+            return False
 
-        self.deleteCredentials(username)
-        self.addCredentials(username, new_password)
+        return self.deleteCredentials(username) and self.addCredentials(username, new_password)
 
 
     # clear all credentials
     def wipeOut(self):
         with open(self.path, "w") as file:
             json.dump({"credentials": []}, file, indent=4)
+        return True
 
 
     def isValidCredentials(self, username, password):
@@ -160,9 +163,11 @@ class SQLite_Password_Manager(Password_Manager):
 
             sqlite_connection.commit()
             sqlite_connection.close()
+            return True
 
         except sqlite3.Error as error:
             print("Error while creating a sqlite table", error)
+            return False
 
 
     def addCredentials(self, username, password):
@@ -179,15 +184,23 @@ class SQLite_Password_Manager(Password_Manager):
                 cursor.execute(f"SELECT * FROM users WHERE username = '{username}';")
                 username_exists = cursor.fetchone() is not None
                 if username_exists:
-                    username = input(f"Username {username} already exists. Enter a new username:")
+                    # ask if they want to enter a new username
+                    change_username = input(f"Username {username} already exists. Do you want to enter a new username? (yes/no) ")
+                    if change_username == "yes":
+                        username = input(f"Username {username} already exists. Enter a new username:")
+                    else:
+                        print("Exiting...")
+                        return False
 
             # Add new credentials
             cursor.execute("INSERT INTO users VALUES (?, ?, ?);", (username, salt, hash))
             sqlite_connection.commit()
             sqlite_connection.close()
+            return True
 
         except sqlite3.Error as error:
             print("Error while connecting to sqlite", error)
+            return False
 
 
     def deleteCredentials(self, username):
@@ -201,19 +214,25 @@ class SQLite_Password_Manager(Password_Manager):
             if not username_exists:
                 print(f"Username {username} does not exist!")
                 sqlite_connection.close()
-                return
+                return False
 
             # Delete credentials
             cursor.execute(f"DELETE FROM users WHERE username = '{username}';")
             sqlite_connection.commit()
             sqlite_connection.close()
+            return True
 
         except sqlite3.Error as error:
             print("Error while connecting to sqlite", error)
+            return False
 
 
     def changePassword(self, username, old_password, new_password):
-        pass
+        if not self.isValidCredentials(username, old_password):
+            print("Wrong username or password!")
+            return False
+
+        return self.deleteCredentials(username) and self.addCredentials(username, new_password)
 
 
     def isValidCredentials(self, username, password):
