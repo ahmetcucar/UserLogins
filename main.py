@@ -164,9 +164,19 @@ class SQLite_Password_Manager(Password_Manager):
             print("Error while creating a sqlite table", error)
 
 
-
     def addCredentials(self, username, password):
-        pass
+        salt = generate_salt()
+        hash = hash_password_sha256(password, salt)
+
+        try:
+            sqlite_connection = sqlite3.connect(self.db_name)
+            cursor = sqlite_connection.cursor()
+            cursor.execute("INSERT INTO users VALUES (?, ?, ?);", (username, salt, hash))
+            sqlite_connection.commit()
+            sqlite_connection.close()
+
+        except sqlite3.Error as error:
+            print("Error while connecting to sqlite", error)
 
 
     def deleteCredentials(self, username):
@@ -202,7 +212,7 @@ class SQLite_Password_Manager(Password_Manager):
 
 
 def main():
-    sql_pm = SQLite_Password_Manager("test.db")
-    sql_pm.print()
+    sql_pm = SQLite_Password_Manager()
+    
 
 main()
