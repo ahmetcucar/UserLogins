@@ -138,9 +138,10 @@ class SQLite_Password_Manager(Password_Manager):
                 # If the 'users' table exists, print its contents
                 cursor.execute("SELECT * FROM users;")
                 users = cursor.fetchall()
-                print("Seems like the 'users' table already exists. Here are its contents:")
+                print(f"Seems like the 'users' table already exists. It has {len(users)} accounts.")
+                print("Here are the accounts:")
                 for user in users:
-                    print(user)
+                    print(f"--> {user}")
 
                 # TODO: use wipeOut() method to clear all credentials
 
@@ -150,6 +151,11 @@ class SQLite_Password_Manager(Password_Manager):
                     cursor.execute("DROP TABLE users;")
                     cursor.execute("CREATE TABLE users (username TEXT PRIMARY KEY UNIQUE, salt TEXT, hash TEXT);")
                     print("The 'users' table was deleted and a new one was created.")
+
+            else:
+                # If the 'users' table does not exist, create it
+                cursor.execute("CREATE TABLE users (username TEXT PRIMARY KEY UNIQUE, salt TEXT, hash TEXT);")
+                print("The 'users' table was created.")
 
             sqlite_connection.commit()
             sqlite_connection.close()
@@ -196,7 +202,7 @@ class SQLite_Password_Manager(Password_Manager):
 
 
 def main():
-    sql_pm = SQLite_Password_Manager()
+    sql_pm = SQLite_Password_Manager("test.db")
     sql_pm.print()
 
 main()
