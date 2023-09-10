@@ -2,6 +2,19 @@ import hashlib
 import json
 import os
 from abc import ABC, abstractmethod
+import sqlite3
+
+
+def generate_salt():
+    return os.urandom(32).hex()
+
+
+def hash_password_sha256(password, salt):
+    salted_password = password + salt
+    sha256_hasher = hashlib.sha256()
+    sha256_hasher.update(salted_password.encode('utf-8'))
+    return sha256_hasher.hexdigest()
+
 
 class Password_Manager(ABC):
     @abstractmethod
@@ -105,46 +118,85 @@ class JSON_Password_Manager(Password_Manager):
             return False
 
 
-def generate_salt():
-    return os.urandom(32).hex()
+class SQLite_Password_Manager(Password_Manager):
+    def __init__(self, db_name = "userlogins.db"):
+        self.db_name = db_name
+        self.setupDB()
+
+    def setupDB(self):
+        try:
+            # Create or connect to the SQLite database file
+            sqlite_connection = sqlite3.connect(self.db_name)
+            cursor = sqlite_connection.cursor()
+            print(f"Successfully entered {self.db_name}")
+
+            # Check if the 'users' table exists
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users';")
+            table_exists = cursor.fetchone() is not None
+
+            if table_exists:
+                # If the 'users' table exists, print its contents
+                cursor.execute("SELECT * FROM users;")
+                users = cursor.fetchall()
+                print("Seems like the 'users' table already exists. Here are its contents:")
+                for user in users:
+                    print(user)
+
+                # TODO: use wipeOut() method to clear all credentials
+
+                # Ask the user if they want to delete the 'users' table and create a new one
+                answer = input("Do you want to delete the 'users' table and create a new one? (yes/no) ")
+                if answer == "yes":
+                    cursor.execute("DROP TABLE users;")
+                    cursor.execute("CREATE TABLE users (username TEXT PRIMARY KEY UNIQUE, salt TEXT, hash TEXT);")
+                    print("The 'users' table was deleted and a new one was created.")
+
+            sqlite_connection.commit()
+            sqlite_connection.close()
+
+        except sqlite3.Error as error:
+            print("Error while creating a sqlite table", error)
 
 
-def hash_password_sha256(password, salt):
-    salted_password = password + salt
-    sha256_hasher = hashlib.sha256()
-    sha256_hasher.update(salted_password.encode('utf-8'))
-    return sha256_hasher.hexdigest()
+
+    def addCredentials(self, username, password):
+        pass
+
+
+    def deleteCredentials(self, username):
+        pass
+
+
+    def changePassword(self, username, old_password, new_password):
+        pass
+
+
+    def isValidCredentials(self, username, password):
+        pass
+
+
+    def wipeOut(self):
+        pass
+
+
+    def print(self):
+        # print every entry in the database
+        try:
+            sqlite_connection = sqlite3.connect(self.db_name)
+            cursor = sqlite_connection.cursor()
+            cursor.execute("SELECT * FROM users;")
+            users = cursor.fetchall()
+            for user in users:
+                print(user)
+            sqlite_connection.close()
+
+        except sqlite3.Error as error:
+            print("Error while connecting to sqlite", error)
+
 
 
 def main():
-    json_pm = JSON_Password_Manager("./data.json")
-    # json_pm.addCredentials("ahmet", "ucar")
-    # json_pm.addCredentials("hocus", "pocus")
-
-    # print(json_pm.isValidCredentials("ahmet", "ucar"))
-    # print(json_pm.isValidCredentials("ahmet", "ucar2"))
-
-    # # json_pm.isValidCredentials("hocus", "pocus")
-    # # json_pm.isValidCredentials("hocus", "pocus2")
-
-    # # json_pm.changePassword("ahmet", "ucar", "ucar2")
-    # # json_pm.isValidCredentials("ahmet", "ucar")
-    # # json_pm.isValidCredentials("ahmet", "ucar2")
-
-    # json_pm.deleteCredentials("ahmet")
-
-
-    # deleteCredentials("valerie")
-    # addCredentials("hello", "world")
-    # addCredentials("foo", "bar")
-    # addCredentials("valerie", "lange")
-    # addCredentials("henry", "ford")
-
-    # username = input("Enter username: ")
-    # password = input("Enter password: ")
-    # if isValidCredentials(username, password):
-    #     print("Welcome,", username)
-    # else:
-    #     print("Wrong username or password! Get lost!")
+    sql_pm = SQLite_Password_Manager()
+    sql_pm.print()
 
 main()
