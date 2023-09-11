@@ -1,5 +1,5 @@
 import json
-import password_manager
+import src.password_manager as password_manager
 
 class JsonPasswordManager(password_manager.PasswordManager):
     def __init__(self, path):

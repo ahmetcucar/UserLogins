@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import password_manager
+import src.password_manager as password_manager
 import sqlite3
 
 
