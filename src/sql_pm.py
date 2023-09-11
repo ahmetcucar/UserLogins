@@ -3,6 +3,9 @@ import src.password_manager as password_manager
 import sqlite3
 
 
+
+# This is the SQLite password manager class that implements the abstract PasswordManager class
+# It uses a SQLite database to store the credentials, which is more efficient than JSON
 class SqlitePasswordManager(password_manager.PasswordManager):
     def __init__(self, db_name = "data/userlogins.db"):
         self.db_name = db_name

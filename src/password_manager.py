@@ -2,11 +2,13 @@ import os
 from abc import ABC, abstractmethod
 import hashlib
 
-
+# This is a helper function that generates a random salt
+# in order to make the hash more secure
 def generate_salt():
     return os.urandom(32).hex()
 
 
+# This is a helper function that hashes a password using the SHA256 algorithm
 def hash_password_sha256(password, salt):
     salted_password = password + salt
     sha256_hasher = hashlib.sha256()
@@ -14,6 +16,7 @@ def hash_password_sha256(password, salt):
     return sha256_hasher.hexdigest()
 
 
+# This is the abstract class that both password managers will inherit from
 class PasswordManager(ABC):
     @abstractmethod
     def add_credentials(self, username, password):

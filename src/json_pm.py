@@ -1,6 +1,9 @@
 import json
 import src.password_manager as password_manager
 
+
+# This is the JSON password manager class that implements the abstract PasswordManager class
+# It uses a JSON file to store the credentials, which is not very efficient
 class JsonPasswordManager(password_manager.PasswordManager):
     def __init__(self, path = "data/data.json"):
         self.path = path

@@ -2,7 +2,6 @@ import src.sql_pm as sql_pm
 import src.json_pm as json_pm
 
 
-# TODO: hide user password while typing
 def main():
     def printInstructions():
         print("\nHere are the following commands you can use:")
