@@ -149,8 +149,7 @@ class SQLite_Password_Manager(Password_Manager):
                     # Ask the user if they want to delete the 'users' table and create a new one
                     answer = input("Do you want to delete the 'users' table and create a new one? (yes/no) ")
                     if answer == "yes":
-                        cursor.execute("DROP TABLE users;")
-                        cursor.execute("CREATE TABLE users (username TEXT PRIMARY KEY UNIQUE, salt TEXT, hash TEXT);")
+                        self.wipeOut()
                         print("The 'users' table was deleted and a new one was created.")
 
             else:
@@ -248,17 +247,12 @@ class SQLite_Password_Manager(Password_Manager):
             # Check if password is correct
             cursor.execute(f"SELECT salt, hash FROM users WHERE username = '{username}';")
             salt, hash = cursor.fetchone()
-            salted_password = password + salt
-            sha256_hasher = hashlib.sha256()
-            sha256_hasher.update(salted_password.encode('utf-8'))
             sqlite_connection.close()
-            return hash == sha256_hasher.hexdigest()
+            return hash == hash_password_sha256(password, salt)
 
         except sqlite3.Error as error:
             print("Error while connecting to sqlite", error)
             return False
-
-
 
 
     # clear all credentials
@@ -275,21 +269,6 @@ class SQLite_Password_Manager(Password_Manager):
             print("Error while connecting to sqlite", error)
             return False
 
-    # TODO: delete later
-    def print(self):
-        # print every entry in the database
-        try:
-            sqlite_connection = sqlite3.connect(self.db_name)
-            cursor = sqlite_connection.cursor()
-            cursor.execute("SELECT * FROM users;")
-            users = cursor.fetchall()
-            for user in users:
-                print(user)
-            sqlite_connection.close()
-
-        except sqlite3.Error as error:
-            print("Error while connecting to sqlite", error)
-
 
 # TODO: hide user password while typing
 def main():
@@ -301,9 +280,7 @@ def main():
     print(sql_pm.isValidCredentials("user1", "password1"))
     print(sql_pm.isValidCredentials("user1", "as;ldjf;ak"))
 
-    sql_pm.print()
-    sql_pm.wipeOut()
-    sql_pm.print()
+    # sql_pm.wipeOut()
 
     
 main()
