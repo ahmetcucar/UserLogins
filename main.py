@@ -143,9 +143,6 @@ class SQLite_Password_Manager(Password_Manager):
                 users = cursor.fetchall()
                 if len(users) > 0:
                     print(f"Seems like the 'users' table already exists. It has {len(users)} accounts.")
-                    print("Here are the accounts:")
-                    for user in users:
-                        print(f"--> {user}")
 
                     # TODO: use wipeOut() method to clear all credentials
 
@@ -236,12 +233,47 @@ class SQLite_Password_Manager(Password_Manager):
 
 
     def isValidCredentials(self, username, password):
-        pass
+        try:
+            sqlite_connection = sqlite3.connect(self.db_name)
+            cursor = sqlite_connection.cursor()
+
+            # See if username is in table
+            cursor.execute(f"SELECT * FROM users WHERE username = '{username}';")
+            username_exists = cursor.fetchone() is not None
+            if not username_exists:
+                print(f"Username {username} does not exist!")
+                sqlite_connection.close()
+                return False
+
+            # Check if password is correct
+            cursor.execute(f"SELECT salt, hash FROM users WHERE username = '{username}';")
+            salt, hash = cursor.fetchone()
+            salted_password = password + salt
+            sha256_hasher = hashlib.sha256()
+            sha256_hasher.update(salted_password.encode('utf-8'))
+            sqlite_connection.close()
+            return hash == sha256_hasher.hexdigest()
+
+        except sqlite3.Error as error:
+            print("Error while connecting to sqlite", error)
+            return False
 
 
+
+
+    # clear all credentials
     def wipeOut(self):
-        pass
-
+        try:
+            sqlite_connection = sqlite3.connect(self.db_name)
+            cursor = sqlite_connection.cursor()
+            cursor.execute("DROP TABLE users;")
+            cursor.execute("CREATE TABLE users (username TEXT PRIMARY KEY UNIQUE, salt TEXT, hash TEXT);")
+            sqlite_connection.commit()
+            sqlite_connection.close()
+            return True
+        except sqlite3.Error as error:
+            print("Error while connecting to sqlite", error)
+            return False
 
     # TODO: delete later
     def print(self):
@@ -262,5 +294,16 @@ class SQLite_Password_Manager(Password_Manager):
 # TODO: hide user password while typing
 def main():
     sql_pm = SQLite_Password_Manager()
+    sql_pm.addCredentials("user1", "password1")
+    sql_pm.addCredentials("user2", "password2")
+    sql_pm.addCredentials("user3", "password3")
+
+    print(sql_pm.isValidCredentials("user1", "password1"))
+    print(sql_pm.isValidCredentials("user1", "as;ldjf;ak"))
+
+    sql_pm.print()
+    sql_pm.wipeOut()
+    sql_pm.print()
+
     
 main()
