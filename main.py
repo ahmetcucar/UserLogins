@@ -16,35 +16,35 @@ def hash_password_sha256(password, salt):
     return sha256_hasher.hexdigest()
 
 
-class Password_Manager(ABC):
+class PasswordManager(ABC):
     @abstractmethod
-    def addCredentials(self, username, password):
+    def add_credentials(self, username, password):
         pass
 
     @abstractmethod
-    def deleteCredentials(self, username):
+    def delete_credentials(self, username):
         pass
 
     @abstractmethod
-    def changePassword(self, username, old_password, new_password):
+    def change_password(self, username, old_password, new_password):
         pass
 
     @abstractmethod
-    def isValidCredentials(self, username, password):
+    def verify_credentials(self, username, password):
         pass
 
     @abstractmethod
-    def wipeOut(self):
+    def wipe_credentials(self):
         pass
 
 
-class JSON_Password_Manager(Password_Manager):
+class JsonPasswordManager(PasswordManager):
     def __init__(self, path):
         self.path = path
-        self.wipeOut()
+        self.wipe_credentials()
 
 
-    def addCredentials(self, username, password):
+    def add_credentials(self, username, password):
         salt = generate_salt()
         hash = hash_password_sha256(password, salt)
 
@@ -74,7 +74,7 @@ class JSON_Password_Manager(Password_Manager):
         return True
 
 
-    def deleteCredentials(self, username):
+    def delete_credentials(self, username):
         with open(self.path, "r") as file:
             data = json.load(file)
             credentials = data["credentials"]
@@ -88,22 +88,22 @@ class JSON_Password_Manager(Password_Manager):
             return False
 
 
-    def changePassword(self, username, old_password, new_password):
-        if not self.isValidCredentials(username, old_password):
+    def change_password(self, username, old_password, new_password):
+        if not self.verify_credentials(username, old_password):
             print("Wrong username or password!")
             return False
 
-        return self.deleteCredentials(username) and self.addCredentials(username, new_password)
+        return self.delete_credentials(username) and self.add_credentials(username, new_password)
 
 
     # clear all credentials
-    def wipeOut(self):
+    def wipe_credentials(self):
         with open(self.path, "w") as file:
             json.dump({"credentials": []}, file, indent=4)
         return True
 
 
-    def isValidCredentials(self, username, password):
+    def verify_credentials(self, username, password):
         with open(self.path, "r") as file:
             data = json.load(file)
             credentials = data["credentials"]
@@ -121,7 +121,7 @@ class JSON_Password_Manager(Password_Manager):
             return False
 
 
-class SQLite_Password_Manager(Password_Manager):
+class SqlitePasswordManager(PasswordManager):
     def __init__(self, db_name = "userlogins.db"):
         self.db_name = db_name
         self.setupDB()
@@ -147,7 +147,7 @@ class SQLite_Password_Manager(Password_Manager):
                     # Ask the user if they want to delete the 'users' table and create a new one
                     answer = input("Do you want to delete the 'users' table and create a new one? (yes/no) ")
                     if answer == "yes":
-                        self.wipeOut()
+                        self.wipe_credentials()
                         print("The 'users' table was deleted and a new one was created.")
 
             else:
@@ -164,7 +164,7 @@ class SQLite_Password_Manager(Password_Manager):
             return False
 
 
-    def addCredentials(self, username, password):
+    def add_credentials(self, username, password):
         salt = generate_salt()
         hash = hash_password_sha256(password, salt)
 
@@ -197,7 +197,7 @@ class SQLite_Password_Manager(Password_Manager):
             return False
 
 
-    def deleteCredentials(self, username):
+    def delete_credentials(self, username):
         try:
             sqlite_connection = sqlite3.connect(self.db_name)
             cursor = sqlite_connection.cursor()
@@ -221,15 +221,15 @@ class SQLite_Password_Manager(Password_Manager):
             return False
 
 
-    def changePassword(self, username, old_password, new_password):
-        if not self.isValidCredentials(username, old_password):
+    def change_password(self, username, old_password, new_password):
+        if not self.verify_credentials(username, old_password):
             print("Wrong username or password!")
             return False
 
-        return self.deleteCredentials(username) and self.addCredentials(username, new_password)
+        return self.delete_credentials(username) and self.add_credentials(username, new_password)
 
 
-    def isValidCredentials(self, username, password):
+    def verify_credentials(self, username, password):
         try:
             sqlite_connection = sqlite3.connect(self.db_name)
             cursor = sqlite_connection.cursor()
@@ -254,7 +254,7 @@ class SQLite_Password_Manager(Password_Manager):
 
 
     # clear all credentials
-    def wipeOut(self):
+    def wipe_credentials(self):
         try:
             sqlite_connection = sqlite3.connect(self.db_name)
             cursor = sqlite_connection.cursor()
@@ -281,7 +281,7 @@ def main():
         print("-> exit")
 
     print("Hi! Welcome to the SQLite Password Manager!\n")
-    sql_pm = SQLite_Password_Manager()
+    sql_pm = SqlitePasswordManager()
 
     printInstructions()
 
@@ -290,7 +290,7 @@ def main():
         match comm[0]:
             case "add":
                 if len(comm) == 3:
-                    if sql_pm.addCredentials(comm[1], comm[2]):
+                    if sql_pm.add_credentials(comm[1], comm[2]):
                         print(f"Added {comm[1]}!")
                     else:
                         print("Failed to add credentials!")
@@ -299,7 +299,7 @@ def main():
 
             case "delete":
                 if len(comm) == 2:
-                    if sql_pm.deleteCredentials(comm[1]):
+                    if sql_pm.delete_credentials(comm[1]):
                         print(f"Deleted {comm[1]}!")
                     else:
                         print("Failed to delete credentials!")
@@ -308,7 +308,7 @@ def main():
 
             case "verify":
                 if len(comm) == 3:
-                    if sql_pm.isValidCredentials(comm[1], comm[2]):
+                    if sql_pm.verify_credentials(comm[1], comm[2]):
                         print(f"Valid credentials!")
                     else:
                         print("Invalid credentials!")
@@ -317,7 +317,7 @@ def main():
 
             case "change":
                 if len(comm) == 4:
-                    if sql_pm.changePassword(comm[1], comm[2], comm[3]):
+                    if sql_pm.change_password(comm[1], comm[2], comm[3]):
                         print(f"Changed {comm[1]}'s password!")
                     else:
                         print("Failed to change password!")
@@ -326,7 +326,7 @@ def main():
 
             case "reset":
                 if len(comm) == 1:
-                    if sql_pm.wipeOut():
+                    if sql_pm.wipe_credentials():
                         print("Cleared out all credentials!")
                     else:
                         print("Failed to clear out all credentials!")
