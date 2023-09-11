@@ -131,7 +131,7 @@ class SQLite_Password_Manager(Password_Manager):
             # Create or connect to the SQLite database file
             sqlite_connection = sqlite3.connect(self.db_name)
             cursor = sqlite_connection.cursor()
-            print(f"Successfully entered {self.db_name}")
+            print(f"Successfully entered {self.db_name}\n")
 
             # Check if the 'users' table exists
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users';")
@@ -143,8 +143,6 @@ class SQLite_Password_Manager(Password_Manager):
                 users = cursor.fetchall()
                 if len(users) > 0:
                     print(f"Seems like the 'users' table already exists. It has {len(users)} accounts.")
-
-                    # TODO: use wipeOut() method to clear all credentials
 
                     # Ask the user if they want to delete the 'users' table and create a new one
                     answer = input("Do you want to delete the 'users' table and create a new one? (yes/no) ")
@@ -272,15 +270,87 @@ class SQLite_Password_Manager(Password_Manager):
 
 # TODO: hide user password while typing
 def main():
+    def printInstructions():
+        print("\nHere are the following commands you can use:")
+        print("-> add <username> <password>")
+        print("-> delete <username>")
+        print("-> verify <username> <password>")
+        print("-> change <username> <old_password> <new_password>")
+        print("-> reset")
+        print("-> help")
+        print("-> exit")
+
+    print("Hi! Welcome to the SQLite Password Manager!\n")
     sql_pm = SQLite_Password_Manager()
-    sql_pm.addCredentials("user1", "password1")
-    sql_pm.addCredentials("user2", "password2")
-    sql_pm.addCredentials("user3", "password3")
 
-    print(sql_pm.isValidCredentials("user1", "password1"))
-    print(sql_pm.isValidCredentials("user1", "as;ldjf;ak"))
+    printInstructions()
 
-    # sql_pm.wipeOut()
+    comm = input("\nEnter a command: ").split(" ")
+    while True:
+        match comm[0]:
+            case "add":
+                if len(comm) == 3:
+                    if sql_pm.addCredentials(comm[1], comm[2]):
+                        print(f"Added {comm[1]}!")
+                    else:
+                        print("Failed to add credentials!")
+                else:
+                    print("Invalid command length!")
 
-    
-main()
+            case "delete":
+                if len(comm) == 2:
+                    if sql_pm.deleteCredentials(comm[1]):
+                        print(f"Deleted {comm[1]}!")
+                    else:
+                        print("Failed to delete credentials!")
+                else:
+                    print("Invalid command length!")
+
+            case "verify":
+                if len(comm) == 3:
+                    if sql_pm.isValidCredentials(comm[1], comm[2]):
+                        print(f"Valid credentials!")
+                    else:
+                        print("Invalid credentials!")
+                else:
+                    print("Invalid command length!")
+
+            case "change":
+                if len(comm) == 4:
+                    if sql_pm.changePassword(comm[1], comm[2], comm[3]):
+                        print(f"Changed {comm[1]}'s password!")
+                    else:
+                        print("Failed to change password!")
+                else:
+                    print("Invalid command length!")
+
+            case "reset":
+                if len(comm) == 1:
+                    if sql_pm.wipeOut():
+                        print("Cleared out all credentials!")
+                    else:
+                        print("Failed to clear out all credentials!")
+                else:
+                    print("Invalid command length!")
+
+            case "help":
+                if len(comm) == 1:
+                    printInstructions()
+                else:
+                    print("Invalid command length!")
+
+            case "exit":
+                if len(comm) == 1:
+                    print("Exiting...")
+                    return
+                else:
+                    print("Invalid command length!")
+
+            case _:
+                print("Invalid command!")
+
+        comm = input("\nEnter a command: ").split(" ")
+
+
+if __name__ == "__main__":
+    main()
