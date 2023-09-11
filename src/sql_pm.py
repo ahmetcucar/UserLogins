@@ -4,7 +4,7 @@ import sqlite3
 
 
 class SqlitePasswordManager(password_manager.PasswordManager):
-    def __init__(self, db_name = "userlogins.db"):
+    def __init__(self, db_name = "data/userlogins.db"):
         self.db_name = db_name
         self.setupDB()
 

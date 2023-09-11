@@ -2,7 +2,7 @@ import json
 import src.password_manager as password_manager
 
 class JsonPasswordManager(password_manager.PasswordManager):
-    def __init__(self, path):
+    def __init__(self, path = "data/data.json"):
         self.path = path
         self.wipe_credentials()
 
