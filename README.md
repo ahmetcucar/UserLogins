@@ -41,7 +41,7 @@ To run the program, first clone the repo, then run main.py:
 ```
 git clone https://github.com/ahmetcucar/user-logins.git
 cd user-logins
-python3 -m src.main
+python3 main.py
 ```
 
 Or to use in your app, you can import `sql_pm.py` and use your own instance of the class.
