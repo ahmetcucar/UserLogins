@@ -59,6 +59,10 @@ class JsonPasswordManager(password_manager.PasswordManager):
             print("Wrong username or password!")
             return False
 
+        if old_password == new_password:
+            print("Old and new passwords are the same!")
+            return False
+
         return self.delete_credentials(username) and self.add_credentials(username, new_password)
 
 
