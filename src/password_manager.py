@@ -16,7 +16,7 @@ def hash_password_sha256(password, salt):
     return sha256_hasher.hexdigest()
 
 
-# This is the abstract class that both password managers will inherit from
+# This is the abstract class that both password managers will implement
 class PasswordManager(ABC):
     @abstractmethod
     def add_credentials(self, username, password):
